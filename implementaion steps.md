@@ -76,5 +76,24 @@ see how to train the loop (1*V100 16day)
 
 ## sampling
 
-then sampling procedure and calculation of fid.
+then sampling procedure 
+
+
+
+```
+python generate.py --outdir=out --steps=18 \
+    --network=https://nvlabs-fi-cdn.nvidia.com/edm/pretrained/edm-cifar10-32x32-cond-vp.pkl
+```
+
+
+
+**runnable**, but i don't have a trained model:
+
+the input for the original f in edm is (x, noise_level (0.002-80))
+
+th einput for the current f in cfm is (x, t (0-1)).
+
+
+
+**and calculation of fid.** Done using edm.
 
