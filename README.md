@@ -24,13 +24,9 @@ Below are some selected toy examples of comparison between (ve/vp/sub-vp/ot) on 
 
 And the corresponding loss curve during training.
 
-<img src="./toy_example/loss_s_curve.png" alt="loss_s_curve" style="zoom: 26%;" /><img src="./toy_example/loss_moons.png" alt="loss_moons" style="zoom: 26%;" /><img src="./toy_example/loss_circles.png" alt="loss_circles" style="zoom: 26%;" />
-
-<img src="./toy_example/loss_blobs.png" alt="loss_blobs" style="zoom:26%;" /><img src="./toy_example/loss_classification.png" alt="loss_classification" style="zoom:26%;" /><img src="./toy_example/loss_swiss.png" alt="loss_swiss" style="zoom: 26%;" />
+![image-20241016231958966](./toy_example/losses.png)
 
 
-
-It is observed that, compared to other trajectories, the loss on the Optimal Transport (OT) trajectory converges rapidly and stably.
 
 
 
@@ -61,7 +57,7 @@ Hyperparameter choices are provided in the main function:
 
 ```python
     datasets = ["moons", "circles", "blobs", "noisy_circles", "s_curve", "classification", "swiss"]
-    models = ["ve", "vp", "subvp", "ot"]
+    trajectories = ["ve", "vp", "subvp", "ot"]
     
     kwargs_training = {
         "n_points": 30_000,
@@ -92,7 +88,7 @@ We have implemented a standard version for image generation tasks based on the f
 + Modify the training loop (score matching to flow matching)
 + Modify the sampling method (stochastic to deterministic ODE)
 
-However, due to lack of GPUs, the reimplementation seems not meaningful if unable to run....... Thus looking forward to collaborations on the topic of flow matching in the future. [email](yougotaaa@gmail.com)
+However, due to lack of GPUs, experimental results and checkpoints are not available. Thus looking forward to collaborations on the topic of flow matching in the future. [email](yougotaaa@gmail.com)
 
 
 
