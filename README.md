@@ -88,7 +88,7 @@ We have implemented a standard version for image generation tasks based on the f
 + Modify the training loop (score matching to flow matching)
 + Modify the sampling method (stochastic to deterministic ODE)
 
-However, due to lack of GPUs, experimental results and checkpoints are not available. Thus looking forward to collaborations on the topic of flow matching in the future. [email](yougotaaa@gmail.com)
+However, due to lack of GPUs, experimental results and checkpoints are currently not available. Thus looking forward to collaborations in the future regarding flux based generative models. [email](yougotaaa@gmail.com)
 
 
 
