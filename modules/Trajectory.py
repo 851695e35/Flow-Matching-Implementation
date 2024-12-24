@@ -82,9 +82,9 @@ class VPDiffusionFlowMatching:
         return torch.mean((v_t(t[:,0],x) - self.u_t(t,x,x_1))**2)  
 
 
-# Variance Exploding Diffusion
+# Variance Exploding Diffusion SMLD
 
-class VEDiffusionFlowMatching:
+class VESMLDDiffusionFlowMatching:
 
     def __init__(self) -> None:
         super().__init__()
@@ -113,6 +113,36 @@ class VEDiffusionFlowMatching:
 
         return torch.mean((v_t(t[:,0],x) - self.u_t(t,x,x_1))**2)
 
+# Variance Exploding Diffusion EMD
+
+class VEEDMDiffusionFlowMatching:
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.sigma_min = 0.002
+        self.sigma_max = 2. # 80 in the paper, but cause loss explosion
+        self.eps = 1e-5
+    
+    def sigma_t(self, t: torch.Tensor) -> torch.Tensor:
+        return self.sigma_min + t * (self.sigma_max - self.sigma_min)
+    
+    def dsigma_dt(self, t: torch.Tensor) -> torch.Tensor:
+        return self.sigma_max - self.sigma_min
+    
+    def u_t(self, t: torch.Tensor, x: torch.Tensor, x_1: torch.Tensor) -> torch.Tensor: # eq 17 from Flow Matching paper
+        return - (self.dsigma_dt(1.-t)/self.sigma_t(1.-t)) * (x - x_1)
+    
+    def loss(self, v_t:nn.Module, x_1: torch.Tensor) -> torch.Tensor:
+        # t ~ Unif([0,1])
+        t = torch.rand(1,device = x_1.device) + torch.arange(len(x_1),device = x_1.device)/len(x_1)
+        t = t % (1-self.eps)
+        t = t[:,None].expand(x_1.shape)    
+
+        # x ~p_t(x|x_1) N(x|x_1, sigma_{1-t}I) eq 16 from Flow Matching paper
+        # randn_like : Returns a tensor with the same size as input that is filled with random numbers from a normal distribution with mean 0 and variance 1.
+        x = x_1 + self.sigma_t(1. - t) * torch.randn_like(x_1)
+
+        return torch.mean((v_t(t[:,0],x) - self.u_t(t,x,x_1))**2)
 
 # sub Variance Preserving Diffusion
 
@@ -163,3 +193,41 @@ class subVPDiffusionFlowMatching:
         x = self.mu_t(t,x_1) + self.sigma_t(t,x_1) * torch.randn_like(x_1)
 
         return torch.mean((v_t(t[:,0],x) - self.u_t(t,x,x_1))**2)  
+
+
+
+class CosineDiffusionFlowMatching:
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.eps = 1e-9
+    
+    def tan_t(self, t: torch.Tensor) -> torch.Tensor:
+        return torch.sin(t * np.pi/2) / torch.cos(t * np.pi/2)
+    
+    def cos_t(self, t: torch.Tensor) -> torch.Tensor:
+        return torch.cos(t * np.pi/2)
+    def sin_t(self, t: torch.Tensor) -> torch.Tensor:
+        return torch.sin(t * np.pi/2)
+    def u_t(self, t: torch.Tensor, x: torch.Tensor, x_1: torch.Tensor) -> torch.Tensor: # eq 17 from Flow Matching paper
+        # return self.tan_t(t) * x - x_1 / self.cos_t(t) loss: 0.9 soso
+        # return self.sin_t(t) * x - self.cos_t(t) * x_1 loss: 0.36 bad
+        # return self.cos_t(t) * x - self.sin_t(t) * x_1 loss: 0.11 bad
+        # return self.sin_t(t) * x + self.cos_t(t) * x_1 loss: 0.36 pretty bad
+        # return self.cos_t(t) * x + self.sin_t(t) * x_1 loss: 0.11 pretty pretty bad
+        # return -self.cos_t(t) * x + self.sin_t(t) * x_1 loss: 0.11 pretty bad
+        # return -np.pi/2 * (self.tan_t(t) * x - x_1 / self.cos_t(t)) loss: 2.29, good
+        return -np.pi/2 * (self.tan_t(t) * x - x_1 / self.cos_t(t))
+    
+    def loss(self, v_t:nn.Module, x_1: torch.Tensor) -> torch.Tensor:
+        # t ~ Unif([0,1])
+        t = torch.rand(1,device = x_1.device) + torch.arange(len(x_1),device = x_1.device)/len(x_1)
+        t = t % (1-self.eps)
+        t = t[:,None].expand(x_1.shape)    
+
+        # x ~p_t(x|x_1) N(x|x_1, sigma_{1-t}I) eq 16 from Flow Matching paper
+        # randn_like : Returns a tensor with the same size as input that is filled with random numbers from a normal distribution with mean 0 and variance 1.
+        
+        x = x_1 * self.sin_t(t) + torch.randn_like(x_1) * self.cos_t(t)
+
+        return torch.mean((v_t(t[:,0],x) - self.u_t(t,x,x_1))**2)

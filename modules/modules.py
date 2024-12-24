@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from zuko.utils import odeint
+from torchdiffeq import odeint # needs to be changed in the code accordingly.
 from typing import *
 
 
@@ -24,8 +25,36 @@ class CondVF(nn.Module):
 
     # decode maps the prior distribution to the data distribution
     # t from 0 to 1
-    def decode(self, x_0: torch.Tensor) -> torch.Tensor:
-        return odeint(self.wrapper, x_0, 0., 1., self.parameters())
+    #     sol = odeint(
+    #     ode_func,
+    #     x_init,
+    #     time_grid,
+    #     method=method,
+    #     options=ode_opts,
+    #     atol=atol,
+    #     rtol=rtol,
+    # )
+    # atol (float): Absolute tolerance, used for adaptive step solvers.
+    # rtol (float): Relative tolerance, used for adaptive step solvers.
+    
+    def eulersolver(self,x_0:torch.Tensor, time_grid: torch.Tensor) -> torch.Tensor:
+        # manually solve the ODE using midpoint
+        # x_0 : initial condition
+        # time_grid : time grid [t0,t1,...,tn]
+        time_grid = time_grid.to(x_0.device)
+        x_list = [x_0]
+        for i in range(1,len(time_grid)):
+            x_0 = x_0 + (time_grid[i] - time_grid[i-1]) * self.wrapper(time_grid[i],x_0)
+            x_list.append(x_0)
+        
+        return torch.stack(x_list)
+            
+        
+        
+        
+    
+    def decode(self, x_0: torch.Tensor, time_grid: torch.Tensor,method) -> torch.Tensor:
+        return odeint(self,x_0, time_grid, method = method)
     
     def decode_t0_t1(self, x_0, t0, t1):
         return odeint(self.wrapper, x_0, t0, t1, self.parameters())

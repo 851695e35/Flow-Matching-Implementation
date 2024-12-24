@@ -6,27 +6,37 @@ This is a simple and easy to follow implementation for "Flow Matching for genera
 
 
 
-Besides the VP/VE trajectory for comparison, we've also added the **sub-VP** trajectory from [Song et al. 2021](https://arxiv.org/abs/2011.13456). Detailed Derivation of the sub-VP trajectory can be seen in [sub-VP-flow-matching.pdf](sub-VP-flow-matching.pdf).
+Besides the VP/VE/OT trajectory for comparison, we've also added the **sub-VP** trajectory from [Song et al. 2021](https://arxiv.org/abs/2011.13456).
+
+**EDM(VE)** trajectory from [Karras et al. 2022](https://arxiv.org/abs/2206.00364), **Cosine** trajectory from [Nichol et al. 2021](https://arxiv.org/abs/2102.09672). Formal formulation can be found in [trajectories](./docs/trajectories.pdf).
 
 
 
 ### Figures
 
-Below are some selected toy examples of comparison between (ve/vp/sub-vp/ot) on 2d data for visualization.
+Selected Training loss curve. (other's can be found in the loss_img folder)
 
-![comparison_s_curve](./toy_example/comparison_s_curve.png)
+![loss_blobs](./loss_img/loss_blobs.png)
 
-![comparison_blobs](./toy_example/comparison_moons.png)
+Visualized trajectory and final distribution. (leftmost : training set, right : sampled)
 
-![comparison_circles](./toy_example/comparison_circles.png)
+![trajectory_blobs](./trajectory_visual/trajectory_blobs.png)
+
+![trajectory_circles](./trajectory_visual/trajectory_circles.png)
+
+![trajectory_classification](./trajectory_visual/trajectory_classification.png)
+
+![trajectory_moons](./trajectory_visual/trajectory_moons.png)
+
+![trajectory_noisy_circles](./trajectory_visual/trajectory_noisy_circles.png)
+
+![trajectory_s_curve](./trajectory_visual/trajectory_s_curve.png)
+
+![trajectory_swiss](./trajectory_visual/trajectory_swiss.png)
 
 
 
-And the corresponding loss curve during training.
-
-![image-20241016231958966](./toy_example/losses.png)
-
-
+It appears that the optimal transport is not straight in many cases.
 
 
 
@@ -47,18 +57,21 @@ pip install -r requirements.txt
 
 Running demo:
 
+```py
+python flow_matching.py # for training
+python trajvis.py # for visualization
 ```
-python flow_matching.py
-```
 
 
 
-Hyperparameter choices are provided in the main function:
+Hyperparameter choices:
+
+`flow_matching.py`
 
 ```python
     datasets = ["moons", "circles", "blobs", "noisy_circles", "s_curve", "classification", "swiss"]
-    trajectories = ["ve", "vp", "subvp", "ot"]
     
+    trajectories = ["ve-smld","ve-edm", "vp", "subvp", "ot","cosine"]
     kwargs_training = {
         "n_points": 30_000,
         "n_samples": 30_000,
@@ -73,20 +86,23 @@ Hyperparameter choices are provided in the main function:
     }
 ```
 
+`trajvis.py`
+
+```python
+    datasets = ["moons", "circles", "blobs", "noisy_circles", "s_curve", "classification", "swiss"]
+    
+    trajectories = ["ve-smld","ve-edm", "vp", "subvp", "ot","cosine"]
+    kwargs_sampling = {
+        "n_points": 30_000,
+        "n_samples": 30_000,
+        "n_epochs": 200,
+        "n_trajectory": 50,
+        "schedule": 'time_uniform',
+        "nfe": 200,
+    }
+```
 
 
-
-
-### Future Version
-
-**Implementation regarding Image generation on cifar10 dataset**
-
-We have implemented a standard version for image generation tasks based on the framework of [EDM](https://arxiv.org/abs/2206.00364). By specifically making the following modifications:
-
-+ Remove original preconditions (since it's not necessary for FM) and losses.
-+ Add Flow matching trajectories and losses
-+ Modify the training loop (score matching to flow matching)
-+ Modify the sampling method (stochastic to deterministic ODE)
 
 
 
@@ -96,7 +112,7 @@ We have implemented a standard version for image generation tasks based on the f
 
 ### References
 
-This code is a heavy modification based on the following repository:
+Code reference:
 
 https://github.com/gle-bellier/flow-matching
 
